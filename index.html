@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ohio Xtreme Volleyball Tryout Results 2025</title>
+<style>
+  :root { --xt-teal:#00b3b3; --xt-purple:#5b4bff; }
+  body { margin:0; font-family:Poppins,Arial,sans-serif; background:#f7f7f7; }
+  .wrap { max-width:950px; margin:40px auto; background:#fff; border-radius:22px;
+          box-shadow:0 6px 18px rgba(0,0,0,.1); overflow:hidden; }
+  .hero { background:linear-gradient(90deg,var(--xt-teal),var(--xt-purple)); color:#fff;
+          padding:25px; font-size:28px; font-weight:700; text-align:center; }
+  .intro { text-align:center; color:#444; margin:20px 30px 40px; font-size:16px; }
+  .xt-card { margin:0 30px 30px; padding:25px 20px; border-radius:18px; background:#fafafa;
+             border:1px solid #eee; box-shadow:0 2px 6px rgba(0,0,0,.05); }
+  .xt-card h3 { margin:0; color:var(--xt-teal); font-size:22px; font-weight:700; }
+  .xt-badge { background:linear-gradient(90deg,var(--xt-teal),var(--xt-purple)); color:#fff;
+              font-size:12px; font-weight:700; padding:6px 14px; border-radius:999px;
+              text-transform:uppercase; }
+  .head { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .xt-roster { display:flex; flex-wrap:wrap; gap:10px; background:#fff; border-radius:10px;
+               border:1px solid #ddd; padding:10px 15px; }
+  .xt-num { background:#eee; border-radius:6px; padding:6px 10px; cursor:pointer; user-select:none; transition:.2s; }
+  .xt-num.accepted { background:linear-gradient(90deg,var(--xt-teal),var(--xt-purple)); color:#fff; font-weight:700; }
+  .footer { background:linear-gradient(90deg,var(--xt-teal),var(--xt-purple)); color:#fff; padding:25px;
+            border-radius:0 0 22px 22px; text-align:center; }
+  .footer h4 { margin:0; font-size:20px; }
+  .banner { display:none; margin:16px auto 0; max-width:950px; border-radius:14px; padding:12px 16px; color:#fff;
+            font-weight:700; text-align:center; background:linear-gradient(90deg,var(--xt-teal),var(--xt-purple));
+            box-shadow:0 4px 12px rgba(0,0,0,.15); }
+  .banner small { display:block; font-weight:500; opacity:.9; }
+  .xt-move-wrap { display:inline-flex; align-items:center; gap:6px; margin-left:8px; }
+  .xt-move-select { padding:4px 8px; border:1px solid #ddd; border-radius:8px; font-size:13px; }
+  .xt-btn { padding:6px 10px; border:none; border-radius:999px; cursor:pointer; color:#fff; font-weight:700;
+            background:linear-gradient(90deg,var(--xt-teal),var(--xt-purple)); }
+  .reset { margin:20px auto; display:none; }
+</style>
+</head>
+<body>
+<div id="banner" class="banner">ADMIN CONTROLS ACTIVE <small>Numbers clickable and Move controls enabled.</small></div>
+<button id="resetBtn" class="xt-btn reset">Reset All Data</button>
+
+<div class="wrap">
+  <div class="hero">🏐 Ohio Xtreme Volleyball Tryout Results 2025</div>
+  <div class="intro">
+    Click a player number after they accept their spot — accepted = teal ✔.<br>
+    Use “Move to Team” in the Waitlist section to fill open spots.<br>
+    (Editable only when <strong>admin mode</strong> is on.)
+  </div>
+
+  <div id="teams"></div>
+
+  <div class="xt-card" style="background:#f0f0f0;border-color:#ddd;">
+    <div class="head">
+      <div class="xt-badge" style="background:gray;">Wait</div>
+      <h3 style="color:#333;">Players on Waitlist</h3>
+    </div>
+    <div id="waitlist" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+
+  <div class="footer">
+    <h4>Next Steps</h4>
+    <p>Offers must be accepted by <strong>[Insert Date]</strong>.<br>
+       Contact <strong>jamie@ohioxtreme.com</strong> for questions.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const KEY="vball2025";
+  const TEAMS=[
+    ["12team","12 Team"],
+    ["13teal","13 Teal"],["13black","13 Black"],
+    ["14teal","14 Teal"],["14black","14 Black"],
+    ["15teal","15 Teal"],["15black","15 Black"],
+    ["16teal","16 Teal"],["16black","16 Black"]
+  ];
+  const qs=new URLSearchParams(location.search);
+  const ADMIN = qs.get("admin")==="1";     // <-- admin mode ON if ?admin=1
+  const $=s=>document.querySelector(s);
+  const $$=s=>document.querySelectorAll(s);
+  const load=()=>JSON.parse(localStorage.getItem(KEY)||'{"accepted":{},"moved":{}}');
+  const save=s=>localStorage.setItem(KEY,JSON.stringify(s));
+
+  const state=load();
+
+  // build teams
+  const tOut = TEAMS.map(([id,label])=>{
+    const badge = label.split(" ")[0], name = label.split(" ")[1];
+    const nums = Array.from({length:10},(_,i)=>{
+      const n=String(i+1).padStart(2,"0"); const k=`${id}|${n}`;
+      const acc = state.accepted[k] ? " accepted" : "";
+      return `<span class="xt-num${acc}" data-key="${k}">${n}</span>`;
+    }).join("");
+    return `<div class="xt-card"><div class="head"><div class="xt-badge">${badge}</div><h3>${name}</h3></div>
+            <div id="roster-${id}" class="xt-roster">${nums}</div></div>`;
+  }).join("");
+  $("#teams").innerHTML=tOut;
+
+  // build waitlist
+  const wOut = Array.from({length:10},(_,i)=>{
+    const n=String(i+1).padStart(2,"0");
+    const moved=state.moved[`wait|${n}`];
+    return `<div>
+      <span class="xt-num" data-key="wait|${n}" style="opacity:${moved?0.5:1}">${n}</span>
+      <div class="xt-move-wrap" style="display:${ADMIN?'inline-flex':'none'}">
+        <select class="xt-move-select" id="sel-wait${n}">
+          <option value="">Select Team</option>
+          ${TEAMS.map(([tid,lbl])=>`<option value="${tid}">${lbl}</option>`).join("")}
+        </select>
+        <button class="xt-btn" data-move="${n}">Move to Team</button>
+      </div>
+    </div>`;
+  }).join("");
+  $("#waitlist").innerHTML=wOut;
+
+  // wire events
+  $$("#teams .xt-num").forEach(el=>{
+    el.addEventListener("click",()=>{
+      if(!ADMIN) return;
+      const k=el.dataset.key;
+      const s=load(); s.accepted[k]=!s.accepted[k];
+      el.classList.toggle("accepted", s.accepted[k]);
+      save(s);
+    });
+  });
+
+  $$("#waitlist [data-move]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      if(!ADMIN) return;
+      const n=btn.getAttribute("data-move");
+      const sel=$("#sel-wait"+n);
+      const teamId=sel.value; if(!teamId) return;
+      const roster=$("#roster-"+teamId); if(!roster) return;
+      if(roster.querySelector(`[data-key="${teamId}|${n}"]`)) return;
+
+      const span=document.createElement("span");
+      span.className="xt-num";
+      span.dataset.key=`${teamId}|${n}`;
+      span.textContent=n;
+      span.addEventListener("click",()=>{
+        if(!ADMIN) return;
+        const s=load();
+        const k=span.dataset.key;
+        s.accepted[k]=!s.accepted[k];
+        span.classList.toggle("accepted", s.accepted[k]);
+        save(s);
+      });
+      roster.appendChild(span);
+
+      const w=$(`[data-key="wait|${n}"]`);
+      if(w) w.style.opacity=.5;
+
+      const s=load();
+      s.moved[`wait|${n}`]={teamId,number:n};
+      save(s);
+    });
+  });
+
+  // admin UI
+  $("#banner").style.display = ADMIN ? "block" : "none";
+  const resetBtn=$("#resetBtn");
+  if(ADMIN){
+    resetBtn.style.display="block";
+    resetBtn.addEventListener("click",()=>{
+      if(confirm("Clear all saved roster data?")){
+        localStorage.removeItem(KEY);
+        location.reload();
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>
